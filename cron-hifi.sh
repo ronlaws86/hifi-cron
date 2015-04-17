@@ -46,7 +46,7 @@ function compilehifi {
     git pull
 
     echo "Source needs compiling."
-    killrunning
+    #killrunning
     # we are still assumed to be in hifi directory
     if [[ -d "build" ]]; then
       rm -rf build/*
