@@ -17,6 +17,16 @@ function checkroot {
   [ `whoami` = root ] || { echo "Please run as root"; exit 1; }
 }
 
+function writecommands {
+# Always rewrite just incase something changed
+cat <<EOF > /etc/profile.d/coal.sh
+alias compilehifi='bash <(curl -Ls https://raw.githubusercontent.com/nbq/hifi-compile-scripts/master/centos7-compile-hifi.sh)'
+alias recompilehifi='bash <(curl -Ls https://raw.githubusercontent.com/nbq/hifi-compile-scripts/master/centos7-recompile-hifi.sh)'
+alias runhifi='bash <(curl -Ls https://raw.githubusercontent.com/nbq/hifi-compile-scripts/master/centos7-run-hifi.sh)'
+alias killhifi='bash <(curl -Ls https://raw.githubusercontent.com/nbq/hifi-compile-scripts/master/centos7-kill-hifi.sh)'
+EOF
+}
+
 function killrunning {
   echo "Killing Running Processess"
   pkill -9 -f "[d]omain-server" > /dev/null 2>&1
@@ -99,9 +109,20 @@ function runashifi {
   ./domain-server &>> $HIFILOGDIR/domain-$TIMESTAMP.log&
   ./assignment-client -n 5 &>> $HIFILOGDIR/assignment-$TIMESTAMP.log&
 }
+function killrunning {
+  echo "Killing Running Processess"
+  pkill -9 -f "[d]omain-server" > /dev/null 2>&1
+  pkill -9 -f "[a]ssignment-client" > /dev/null 2>&1
+}
 
 function setwebperm {
   chown -R hifi:hifi $SRCDIR/highfidelity/hifi/domain-server/resources/web
+}
+
+function changeowner  {
+  if [ -d "$HIFIDIR" ]; then
+    chown -R hifi:hifi $HIFIDIR
+  fi  
 }
 
 function movehifi {
@@ -134,6 +155,9 @@ killrunning
 
 # Copy new binaries then change owner
 movehifi
+
+# Copy commands to be run to .bashrc
+writecommands
 
 # Handle re-running the hifi stack as needed here
 handlerunhifi
