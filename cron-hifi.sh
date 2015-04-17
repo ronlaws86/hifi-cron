@@ -138,8 +138,6 @@ function movehifi {
 # Make sure only root can run this
 checkroot
 
-# Make our HiFi user if needed
-createuser
 
 # Deal with the source code and compile highfidelity
 compilehifi
