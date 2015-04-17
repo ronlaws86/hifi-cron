@@ -99,11 +99,6 @@ function runashifi {
   ./domain-server &>> $HIFILOGDIR/domain-$TIMESTAMP.log&
   ./assignment-client -n 5 &>> $HIFILOGDIR/assignment-$TIMESTAMP.log&
 }
-function killrunning {
-  echo "Killing Running Processess"
-  pkill -9 -f "[d]omain-server" > /dev/null 2>&1
-  pkill -9 -f "[a]ssignment-client" > /dev/null 2>&1
-}
 
 function setwebperm {
   chown -R hifi:hifi $SRCDIR/highfidelity/hifi/domain-server/resources/web
