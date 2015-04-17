@@ -130,7 +130,8 @@ compilehifi
  if [ $? -gt 0 ]
 	then
   		echo "Command compilehifi failed, see log file $LOGSDIR/last_compile.log" >> $LOGSDIR/last_compile.log
-  		handlerunhifi
+  		# Run if needed?
+  		# handlerunhifi
   		exit 1
  fi
 # Kill running instance
