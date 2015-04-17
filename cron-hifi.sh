@@ -1,4 +1,6 @@
 #!/bin/bash
+# This is a tweaked version of this script https://github.com/nbq/hifi-compile-scripts/ for use as a cron job to auto-update the hifi stack
+
 # Home Directory for HifiUser
 HIFIDIR="/usr/local/hifi"
 # Last Compile Backup Directory
