@@ -33,10 +33,16 @@ function killrunning {
   pkill -9 -f "[a]ssignment-client" > /dev/null 2>&1
 }
 
+
 function compilehifi {
   # NOTE - This currently assumes /usr/local/src and does not move forward if the source dir does not exist - todo: fix
   if [[ -d "$SRCDIR" ]]; then
     pushd $SRCDIR > /dev/null
+
+    # handle install and compile of cmake
+    if [[ ! -f "/usr/bin/cmake"  ]]; then
+      handlecmake
+    fi
 
     if [[ ! -d "highfidelity" ]]; then
       mkdir highfidelity
@@ -46,50 +52,69 @@ function compilehifi {
 
     if [[ ! -d "hifi" ]]; then
       git clone https://github.com/highfidelity/hifi.git
+      NEWHIFI=1
     fi
     
     # popd src
     popd > /dev/null
     pushd $SRCDIR/highfidelity/hifi > /dev/null 
 
-    # update if needed
-    git pull
-
-    echo "Source needs compiling."
-    #killrunning
-    # we are still assumed to be in hifi directory
-    if [[ -d "build" ]]; then
-      rm -rf build/*
+    # Future todo - add a forcable call to the shell script to override this
+    if [[ $(git pull) =~ "Already up-to-date." ]]; then
+      echo "[$(date)]: Already up to date with last commit." >> $LOGSDIR/cron_log.log
+      echo "Already up to date with last commit."
+      exit 0
     else
-      mkdir build
+      NEWHIFI=1
     fi
-    cd build
-    cmake -DGET_LIBOVR=1 ..
-    make domain-server > $LOGSDIR/last_compile.log
-    if [ $? -eq 0 ]
-	then
-  		echo "Build was successful!" >> $LOGSDIR/last_compile.log
+
+    if [[ $NEWHIFI -eq 1 ]]; then
+      echo "[$(date)]: Source needs compiling." >> $LOGSDIR/cron_log.log
+      echo "Source needs compiling."
+      killrunning
+      # we are still assumed to be in hifi directory
+      if [[ -d "build" ]]; then
+        rm -rf build/*
+      else
+        mkdir build
+      fi
+      cd build
+      cmake -DGET_LIBOVR=1 ..
+	  make domain-server > $LOGSDIR/last_compile.log
+		if [ $? -eq 0 ]
+		then
+			echo "[$(date)]: Build was successful!" > $LOGSDIR/last_compile.log
+			echo "[$(date)]: Build was successful!" >> $LOGSDIR/cron_log.log
+			echo "Build was successful!"
   
-	else
-  		echo "Build Failed!" >> $LOGSDIR/last_compile.log
-  		exit 1
-	fi
-    make assignment-client >> $LOGSDIR/last_compile.log
-    if [ $? -eq 0 ]
-	then
-	  	echo "Build was successful!" >> $LOGSDIR/last_compile.log
-  
-	else
-  		echo "Build Failed!" >> $LOGSDIR/last_compile.log
-  		exit 1
-	fi
+		else
+			echo "[$(date)]: Build Failed!" >> $LOGSDIR/last_compile.log
+			echo "[$(date)]: Build Failed!" >> $LOGSDIR/cron_log.log
+			echo "Build Failed!"
+			exit 1
+		fi
 	
-    setwebperm
+	  make assignment-client >> $LOGSDIR/last_compile.log
+		if [ $? -eq 0 ]
+		then
+			echo "[$(date)]: Build was successful!" >> $LOGSDIR/last_compile.log
+			echo "[$(date)]: Build was successful!" >> $LOGSDIR/cron_log.log
+			echo "Build was successful!"
+  
+		else
+			echo "[$(date)]: Build Failed!" >> $LOGSDIR/last_compile.log
+			echo "[$(date)]: Build Failed!" >> $LOGSDIR/cron_log.log
+			echo "Build Failed!"
+			exit 1
+		fi
+
+      setwebperm
+    fi 
+    # ^ Ending the git pull check
 
     # popd on hifi source dir
     popd > /dev/null
   fi
-  
 }
 
 function handlerunhifi {
@@ -141,13 +166,7 @@ checkroot
 
 # Deal with the source code and compile highfidelity
 compilehifi
- if [ $? -gt 0 ]
-	then
-  		echo "Command compilehifi failed, see log file $LOGSDIR/last_compile.log" >> $LOGSDIR/last_compile.log
-  		# Run if needed?
-  		# handlerunhifi
-  		exit 1
- fi
+
 # Kill running instance
 killrunning
 
