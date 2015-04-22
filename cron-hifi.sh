@@ -71,7 +71,8 @@ function compilehifi {
     if [[ $NEWHIFI -eq 1 ]]; then
       echo "[$(date)]: Source needs compiling." >> $LOGSDIR/cron_log.log
       echo "Source needs compiling."
-      killrunning
+      # commented out so compile can run behind the scenes, to maximise uptime
+      # killrunning
       # we are still assumed to be in hifi directory
       if [[ -d "build" ]]; then
         rm -rf build/*
